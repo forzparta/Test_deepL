@@ -125,7 +125,8 @@ class Resnet19_snn(nn.Module):
         x = self.fc2(x)
         
         return x
-    
+
+
 def select_model(model_type, num_classes, device):
     """
     Args:

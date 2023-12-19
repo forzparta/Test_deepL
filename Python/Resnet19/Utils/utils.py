@@ -24,7 +24,8 @@ def setup_training_components(model, learning_rate=0.01, weight_decay=0.01, mome
     criterion = nn.CrossEntropyLoss()
 
     if optimizer_type == 'SGD':
-        optimizer = optim.SGD(model.parameters(), lr=learning_rate, weight_decay=weight_decay, momentum= momentum)
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate,
+                              weight_decay=weight_decay, momentum= momentum)
     else:
         raise ValueError("Unsupported optimizer type. Choose 'SGD'.")
 
