@@ -123,7 +123,7 @@ class Resnet19_snn(nn.Module):
         x = self.fc1(x)
         x = self.relu2(x)
         x = self.fc2(x)
-        
+ 
         return x
 
 
