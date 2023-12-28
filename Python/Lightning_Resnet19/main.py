@@ -20,10 +20,12 @@ def main() -> None:
     wandb.login()
 
     # Data Module
-    dm = dataset_selector.CIFAR10DataModule(batch_size=config["batch_size"])
-
+    # dm = dataset_selector.CIFAR10DataModule(batch_size=config["batch_size"])
+    img_path = 'Python/Lightning_Resnet19/DataModules/datasets/hbku2019/imgs/train'
+    csv_path = 'Python/Lightning_Resnet19/DataModules/datasets/hbku2019/labels/labels_train.csv'
+    dm = dataset_selector.Hbku2019DataModule(img_path, csv_path)
     # Model
-    model_name = 'conv'
+    model_name = 'fc'
     num_classes = dm.classes
     model = resnet19.select_model(model_name, num_classes)
     # model_1 = resnet19.select_model('fc', num_classes, device)
@@ -36,7 +38,7 @@ def main() -> None:
     wandb_logger = WandbLogger(
         project="lit_resnet19", name=model_name, log_model="all")
     # Trainer
-    callbacks=[
+    '''callbacks=[
         ModelCheckpoint(
             dirpath="Python/Lightning_Resnet19/checkpoints",
             every_n_epochs=2,
@@ -45,8 +47,9 @@ def main() -> None:
             monitor="val/MulticlassAccuracy",
             mode="max",
         ),
-    ]
-    trainer = pl.Trainer(max_epochs=config['max_epochs'], logger=wandb_logger, callbacks=callbacks)
+    ]'''
+    trainer = pl.Trainer(
+        max_epochs=config['max_epochs'], logger=wandb_logger,)  # callbacks=callbacks)
     trainer.fit(lit_model, datamodule=dm)
     trainer.test(lit_model, datamodule=dm)
     wandb.finish()
