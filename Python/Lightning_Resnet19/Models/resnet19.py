@@ -2,8 +2,8 @@
 
 from torch import nn
 from torch.nn import init
-from torchvision.models import resnet18, ResNet18_Weights
-
+from torchvision.models import resnet18, resnet50
+from torchvision.models import ResNet18_Weights, ResNet50_Weights
 
 def initialize_weights(m: nn.Module) -> None:
     '''Function to initialize model parameters'''
@@ -17,6 +17,21 @@ def initialize_weights(m: nn.Module) -> None:
     elif isinstance(m, nn.Linear):
         init.kaiming_normal_(m.weight, nonlinearity='relu')
         init.constant_(m.bias, 0)
+
+
+class Resnet50(nn.Module):
+    '''Resnet 18 model with additional fc layer added at the end'''
+
+    def __init__(self, num_classes: int) -> nn.Module:
+        super().__init__()
+        self.epoch = 0
+        self.resnet_base = resnet50(weights=ResNet50_Weights.DEFAULT)
+        num_ftrs = self.resnet_base.fc.in_features
+        self.resnet_base.fc = nn.Linear(num_ftrs, num_classes)
+
+
+    def forward(self, x):
+        return self.resnet_base(x)
 
 
 class Resnet19Fc(nn.Module):
@@ -44,7 +59,7 @@ class Resnet19Conv(nn.Module):
     def __init__(self, num_classes: int) -> None:
         super().__init__()
         self.epoch = 0
-        self.resnet_base = resnet18(weights=ResNet18_Weights.DEFAULT)
+        self.resnet_base = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         additional_conv_layer = nn.Sequential(
             nn.Conv2d(512, 512, kernel_size=3,
                       stride=1, padding=1, bias=False),
@@ -101,7 +116,7 @@ class Resnet19Snn(nn.Module):
         super(Resnet19Snn, self).__init__()
         self.epoch = 0
 
-        self.conv1 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(3, 128, kernel_size=7, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(128)
         self.relu = nn.ReLU()
 
@@ -189,13 +204,12 @@ class Resnet19SnnDropOut(nn.Module):
         super().__init__()
         self.epoch = 0
 
-        self.conv1 = nn.Conv2d(3, 128, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(3, 128, kernel_size=7, stride=2, padding=1)
         self.bn1 = nn.BatchNorm2d(128)
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(p=0.5)
 
         self.block1 = nn.Sequential(
-            BasicBlock(128, 128, stride=1),
+            BasicBlock(128, 128, stride=2),
             BasicBlockDropOut(128, 128, stride=1),
             BasicBlockDropOut(128, 128, stride=1)
         )
@@ -252,6 +266,9 @@ def select_model(model_type: str, num_classes: int) -> nn.Module:
         model = Resnet19Conv(num_classes)
     elif model_type == 'snn':
         model = Resnet19Snn(num_classes)
+        model.apply(initialize_weights)
+    elif model_type == 'snnDrop':
+        model = Resnet19SnnDropOut(num_classes)
         model.apply(initialize_weights)
     else:
         raise ValueError("Model type not found")

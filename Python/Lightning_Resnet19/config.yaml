@@ -1,15 +1,26 @@
 optimizer: 'adam'  # 'adam' 'sgd'
-lr: 0.01
+lr: 0.001
 momentum: 0.9  # sgd
 scheduler: 'step_lr'
-step_size: 10
+step_size: 15
 gamma: 0.1
-max_epochs: 3
-loss: 'cross_entropy' # or 'binary'
-weight_decay: 0.01
-batch_size: 34
+max_epochs: 80
+loss: 'bin_cross_entropy' # or 'cross_entropy'
+weight_decay: 0.001
+batch_size: 64
 
 #softmax, difference binary-cross
 #f1 score, prec, rec, prec/recc, mean avg prec - avg prec
 #Dropout how works on diff moments
 #Max-norm regularization 
+
+#eda on data
+#size of images, how balanced classe, how to split
+#wsl
+#poetry
+#macro and micro
+#wandb condividere model
+#try to implement map
+
+#where to put augmentation(train or get_item)
+#best way to prepare images (transform)

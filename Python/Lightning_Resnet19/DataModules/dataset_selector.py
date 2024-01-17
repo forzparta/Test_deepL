@@ -85,16 +85,17 @@ class CIFAR10DataModule(pl.LightningDataModule):
     def train_dataloader(self):
         '''Return train dataloader of CIFAR10'''
         return DataLoader(self.train_dataset, batch_size=self.batch_size,
-                          shuffle=True, num_workers=7, persistent_workers=True)
+                          shuffle=True, num_workers=4, persistent_workers=True)
 
     def val_dataloader(self):
         '''Return validation dataloader of CIFAR10'''
         return DataLoader(self.val_dataset, batch_size=self.batch_size*4,
-                          num_workers=7, persistent_workers=True)
+                          num_workers=4, persistent_workers=True)
 
     def test_dataloader(self):
         '''Return test dataloader of CIFAR10'''
-        return DataLoader(self.test_dataset, batch_size=self.batch_size*4, num_workers=7)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size*4,
+                          num_workers=4)
 
 
 class Hbku2019DataModule(pl.LightningDataModule):
@@ -128,16 +129,17 @@ class Hbku2019DataModule(pl.LightningDataModule):
     def train_dataloader(self):
         '''Return train dataloader'''
         return DataLoader(self.train_dataset, batch_size=self.batch_size,
-                          shuffle=True, num_workers=7, persistent_workers=True, pin_memory=True)
+                          shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)
 
     def val_dataloader(self):
         '''Return validation dataloader'''
-        return DataLoader(self.val_dataset, batch_size=self.batch_size*4,
-                          num_workers=7, persistent_workers=True, pin_memory=True)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size*8,
+                          num_workers=4, persistent_workers=True, pin_memory=True)
 
     def test_dataloader(self):
         '''Return test dataloader'''
-        return DataLoader(self.test_dataset, batch_size=self.batch_size*4, num_workers=7)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size*8, num_workers=4,
+                          persistent_workers=True)
 
 
 class CustomDatasetFromCSV(Dataset):
@@ -165,6 +167,54 @@ class CustomDatasetFromCSV(Dataset):
         # Second column is the labels
         if train:
             self.label_arr = np.asarray(self.data_info.iloc[:90000, 1:])
+        else:
+            self.label_arr = np.asarray(self.data_info.iloc[90000:, 1:])
+
+        # Calculate len
+        self.data_len = len(self.label_arr)
+
+    def __getitem__(self, index):
+        # Get image name from the pandas df
+        single_image_name = self.image_arr[index]
+
+        # Open image
+        img_as_img = Image.open(
+            self.path + '/' + single_image_name).convert('RGB')
+        if self.transforms is not None:
+            img_as_tensor = self.transforms(img_as_img)
+
+        single_image_label = self.label_arr[index]
+        return (img_as_tensor, single_image_label)
+
+    def __len__(self):
+        return self.data_len
+
+
+class Hbku2019Debug(Dataset):
+    '''Custom dataset from local using csv and folder with images'''
+
+    def __init__(self, imgs_path, csv_path, transformations, train):
+        """
+        Args:
+            csv_path (string): path to csv file
+            transformations: pytorch transforms for transforms and tensor conversion
+            train: flag to determine if train or val set
+        """
+        self.path = imgs_path
+        # Transforms
+        self.transforms = transformations
+        # Read the csv file
+        self.data_info = pd.read_csv(csv_path)
+        # self.data_info = np.random.shuffle(self.data_info)
+
+        if train:
+            self.image_arr = (self.data_info.iloc[:, 0])
+        else:
+            self.image_arr = (self.data_info.iloc[90000:, 0])
+        self.image_arr = np.asarray(self.image_arr)
+        # Second column is the labels
+        if train:
+            self.label_arr = np.asarray(self.data_info.iloc[:, 1:])
         else:
             self.label_arr = np.asarray(self.data_info.iloc[90000:, 1:])
 
